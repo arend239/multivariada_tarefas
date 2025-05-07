@@ -1,0 +1,299 @@
+---
+title: "TAREFA 2 - Análise Multivariada"
+author: "Márcia H. Barbian"
+date: "2025"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+---
+
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Exercicio 1
+
+Quais os estimadores de máxima verossimilhança de $\boldsymbol{\mu}$ e $\boldsymbol{\Sigma}$ quando a amostra provém de uma distribuição normal multivariada.
+
+## Resposta 1
+
+$$
+X_i \sim \mathcal{N}_p(\boldsymbol{\mu}, \boldsymbol{\Sigma}), i = 1,..., n
+$$
+Para $p$ sendo a dimensão da normal, $\boldsymbol{\mu}$ e $\boldsymbol{\Sigma}$ sendo respectivamente o vetor de médias e a matriz de convariâncias. 
+
+Temos a F.D.P de $X_i$: 
+$$
+f(X_i) = \frac{1}{(2\pi)^{p/2} |\Sigma|^{1/2}} e^{(-\frac{1}{2}(X_i - \mu)'\Sigma^{-1}(X_i-\mu))}
+$$
+Aplicando a função de verossimilhança: 
+
+$$
+L(\boldsymbol{\mu}, \boldsymbol{\Sigma}) = \prod_{i = 1}^{n} f(X_i)
+$$
+
+Aplicando o log:
+
+$$
+\ell(\boldsymbol{\mu}, \boldsymbol{\Sigma}) = -\frac{np}{2} \log(2\pi) - \frac{n}{2} \log|\boldsymbol{\Sigma}| - \frac{1}{2} \sum_{i=1}^n (\mathbf{X}_i - \boldsymbol{\mu})' \boldsymbol{\Sigma}^{-1} (\mathbf{X}_i - \boldsymbol{\mu})
+$$
+
+### EMV de $\boldsymbol{\mu}$
+
+Resolvendo para $\boldsymbol{\mu}$, derivamos $\ell$ em relação ao parâmetro e igualamos a zero para maximizar:
+
+
+$$
+\frac{\partial\ell}{\partial\boldsymbol{\mu}} = \sum_{i=1}^n (\mathbf{X}_i - \boldsymbol{\mu})' \boldsymbol{\Sigma}^{-1} (\mathbf{X}_i - \boldsymbol{\mu})  = 0 \newline
+\frac{\partial\ell}{\partial\boldsymbol{\mu}}= \sum_{i=1}^n \boldsymbol\Sigma^{-1}(X_i - \boldsymbol\mu) = 0
+$$
+
+Como a matriz $\boldsymbol\Sigma$ é invertível podemos multiplicar ambos os lados chegando em: 
+
+$$
+\sum_{i=1}^n (X_i - \boldsymbol\mu) = 0 \newline
+\sum_{i=1}^n X_i - n\boldsymbol\mu = 0 \newline
+\boldsymbol\mu= \frac{1}{n} \sum_{i=1}^n X_i
+$$
+
+Portanto o estimador de máxima verossimilhança de $\boldsymbol{\mu}$ é a média amostral; $\boldsymbol{\hat\mu} = \bar X$
+
+### EMV de $\boldsymbol{\Sigma}$
+
+Repetimos o mesmo processo do anterior, mas agora tendo a matriz $\boldsymbol{\Sigma}$ como referência:
+
+$$
+\frac{\partial \ell}{\partial \boldsymbol{\Sigma}} =  - \frac{n}{2}\boldsymbol{\Sigma}^{-1}+\frac{1}{2}\sum_{i=1}^n\boldsymbol{\Sigma}^{-1}(X_i - \boldsymbol \mu)(X_i- \boldsymbol \mu)'\boldsymbol \Sigma^{-1} = 0 \newline
+- \frac{n}{2}I+\frac{1}{2}\sum_{i=1}^n\boldsymbol{\Sigma}^{-1}(X_i - \boldsymbol \mu)(X_i- \boldsymbol \mu)'\boldsymbol \Sigma^{-1} \boldsymbol \Sigma= 0 \newline
+\boldsymbol{\hat\Sigma} = \frac{1}{n} \sum_{i=1}^n(X_i - \boldsymbol \mu)(X_i -\boldsymbol \mu)'
+$$
+Substituímos $\boldsymbol \mu$ pelo seu estimador calculado anteriormente para chegarmos no EMV de $\boldsymbol \Sigma$:
+
+$$
+\boldsymbol{\hat\Sigma} = \frac{1}{n} \sum_{i=1}^n(X_i - \bar X)(X_i - \bar X)'
+$$
+
+
+# Exercicio 2 
+
+Faça os seguintes exercícios do capítulo 4 do livro Applied Multivariate Statistical Analysis.
+
+## a) 4.1 {-}
+
+
+## b) 4.19 {-}
+
+
+
+## c) 4.22 {-}
+
+
+
+# Exercício 3
+
+Os dados de palmerpenguins contêm medidas para três espécies de pinguins observadas em três ilhas no arquipélago de Palmer, na Antártica. Esses dados foram coletados de 2007 a 2009 pela Dra. Kristen Gorman no Programa de Pesquisa Ecológica da Estação Palmer. Os dados foram importados diretamente do Portal de Dados Ambientais (EDI).
+
+
+```{r, echo=FALSE, out.width = '100%'}
+knitr::include_graphics("lter_penguins.png")
+```
+
+O conjunto de dados palmerpenguins contém 8 variáveis e 344 pinguins.
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+
+
+## -- CORE PACKAGES -- ##
+library(palmerpenguins)
+library(mvnormtest)
+library(ISLR)
+library(tidyverse)
+library(GGally)
+library(qqplotr)
+library(mvShapiroTest)
+
+
+## -- NOSSO BD
+# str(penguins)
+# names(penguins)
+
+df = penguins[,c("bill_length_mm", "bill_depth_mm", "flipper_length_mm" , "body_mass_g",	"species" )]
+```
+
+## a) 
+
+Podemos dizer que as variáveis bill_length_mm, bill_depth_mm, flipper_length_mm e body_mass_g possuem distribuição normal multivarida? Justifique a sua resposta.
+
+------
+
+```{r resposta_a, warning=FALSE, message=FALSE, echo = FALSE}
+
+df.semna = na.omit(df)
+ggpairs(df.semna, mapping = aes(color = species, alpha = 0.3), columns = 1:4)
+
+# mvShapiro.Test(as.matrix(df.semna[,-5]))
+
+
+```
+
+
+```{r anallise_univariada, warning=FALSE, message=FALSE, echo = FALSE, out.width = '50%'}
+ggpairs(df.semna)
+
+ggplot(data = df.semna, mapping = aes(sample = bill_length_mm)) +
+            stat_qq_band() +
+            stat_qq_line() +
+            stat_qq_point() +
+            labs(x = "Theoretical Quantiles", y = "Sample Quantiles", 
+                 title = names(df.semna)[1])
+
+
+ggplot(data = df.semna, mapping = aes(sample = bill_depth_mm)) +
+            stat_qq_band() +
+            stat_qq_line() +
+            stat_qq_point() +
+            labs(x = "Theoretical Quantiles", y = "Sample Quantiles", 
+                 title = names(df.semna)[2])
+
+ggplot(data = df.semna, mapping = aes(sample = flipper_length_mm)) +
+            stat_qq_band() +
+            stat_qq_line() +
+            stat_qq_point() +
+            labs(x = "Theoretical Quantiles", y = "Sample Quantiles", 
+                 title = names(df.semna)[3])
+
+ggplot(data = df.semna, mapping = aes(sample = body_mass_g)) +
+            stat_qq_band() +
+            stat_qq_line() +
+            stat_qq_point() +
+            labs(x = "Theoretical Quantiles", y = "Sample Quantiles", 
+                 title = names(df.semna)[4])
+
+```
+
+<span style="color:#287FD5"> Primeiro podemos analisar as variáveis de forma univariada a fim de verificar se elas são normalmente distribuidas! Através dos qqplots conseguimos ver de forma mais clara que nenhuma possui um comportamento normal! </span>
+
+Podemos ver se o teste de shapiro-wilk rejeita também a hipótese de normalidade das variáveis.
+
+Nossa $H_0$ é que a variável segue uma distribuição normal e a $H_1$ é que não segue.
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+shapiro.test(df.semna$bill_length_mm)
+
+shapiro.test(df.semna$bill_depth_mm)
+
+shapiro.test(df.semna$flipper_length_mm)
+
+shapiro.test(df.semna$body_mass_g)
+
+```
+
+<span style="color:#287FD5"> Podemos ver que todas as variáveis foram rejeitadas, ou seja, não possuem distribuição normal! </span>
+
+Vamos utilizar o teste de shapiro-wilk visto em aula para verificar a normalidade multivariada!!
+
+```{r teste_multivariado, warning=FALSE, message=FALSE, echo = FALSE}
+mvShapiro.Test(as.matrix(df.semna[,-5]))
+```
+
+<span style="color:#287FD5"> Podemos ver que a hipótese nula de normalidade multivariada foi rejeitada! Ou seja não podemos dizer que nossas variáveis possuem distribuição normal multivariada! </span>
+
+## b)
+
+Há algum outlier nesse banco de dados? Justifique a sua resposta.
+
+------
+
+```{r verificando_outliers, warning=FALSE, message=FALSE, echo = FALSE}
+
+p1=ggplot(df.semna)+
+  geom_boxplot(aes(x=bill_length_mm, color=species), show.legend = FALSE)
+
+p2=ggplot(df.semna)+
+  geom_boxplot(aes(x=bill_depth_mm, color=species))
+
+p3=ggplot(df.semna)+
+  geom_boxplot(aes(x=flipper_length_mm, color=species), show.legend = FALSE)
+
+p4=ggplot(df.semna)+
+  geom_boxplot(aes(x=body_mass_g, color=species))
+
+library(gridExtra)
+grid.arrange(p1, p2, p3, p4, ncol=2)
+```
+
+<span style="color:#287FD5"> Nossos boxplots sustentados com a análise gráfica feita na questão anterior utilizando ggpairs para visualizar a dispersão das variáveis, conseguimos ver que todas as variáveis possuem algum outlier! </span>
+
+## c) 
+
+Faça um teste de hipóteses para comparar se a médias das variáveis bill_length_mm, bill_depth_mm, flipper_length_mm e body_mass_g é a mesma para as diferentes espécies de pinguins, qual a sua conclusão? 
+
+-------
+
+O teste de hipóteses para comparar se as médias das variáveis é a mesma para diferentes espécies é a MANOVA.
+Estamos comparando mais de uma variável de cada vez, por isso é um teste multivariado.
+
+ou seja,
+
+$H_0: \mu_{1} = \mu_{2} = \mu_{3}$
+
+$H_1: \mu_{1} \neq \mu_{2} \neq \mu_{3}$
+
+```{r questao_c, warning=FALSE, message=FALSE, echo = FALSE}
+
+
+medias_especies = df.semna %>%
+  group_by(species) %>%
+  summarise(
+    bill_length_mm = mean(bill_length_mm),
+    bill_depth_mm = mean(bill_depth_mm),
+    flipper_length_mm = mean(flipper_length_mm),
+    body_mass_g = mean(body_mass_g)
+  )
+
+print(medias_especies)
+
+
+require(ICSNP)
+m1 = manova(cbind(df.semna$bill_length_mm, df.semna$bill_depth_mm, df.semna$flipper_length_mm, df.semna$body_mass_g) ~ df.semna$species, mu=c(0,0,0,0))
+m1
+summary(m1)
+```
+
+<span style="color:#287FD5"> Dado que o p-valor da MANOVA foi menor que 0.05, rejeitamos a hipótese nula de que as médias das variáveis são iguais para as diferentes espécies de pinguins. </span>
+
+## d) 
+Faça um teste de hipóteses para comparar se a médias das as variáveis bill_length_mm, bill_depth_mm, flipper_length_mm e body_mass_g é a mesma para os diferentes sexos dos pinguins, qual a sua conclusão?
+
+-----
+
+Ainda utilizando a MANOVA neste exercício, pois ainda estamos comparando mais de uma variável de cada vez.
+```{r questao_d, warning=FALSE, message=FALSE, echo = FALSE}
+
+
+df.sexo = penguins[,c("bill_length_mm", "bill_depth_mm", "flipper_length_mm" , "body_mass_g",	"sex" )]
+
+df.sexo = na.omit(df.sexo)  
+
+media.sexo = df.sexo %>%
+  group_by(sex) %>%
+  summarise(
+    bill_length_mm = mean(bill_length_mm),
+    bill_depth_mm = mean(bill_depth_mm),
+    flipper_length_mm = mean(flipper_length_mm),
+    body_mass_g = mean(body_mass_g)
+  )
+
+print(media.sexo)
+
+
+require(ICSNP)
+m1 = manova(cbind(df.sexo$bill_length_mm, df.sexo$bill_depth_mm, df.sexo$flipper_length_mm, df.sexo$body_mass_g) ~ df.sexo$sex, mu=c(0,0,0,0))
+m1
+summary(m1)
+
+```
+
+<span style="color:#287FD5"> Dado que o p-valor da MANOVA foi menor que 0.05, rejeitamos a hipótese nula de que as médias das variáveis são iguais para os diferentes sexos dos pinguins. </span>
