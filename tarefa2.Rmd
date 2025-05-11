@@ -196,6 +196,14 @@ Conforme visto em sala de aula a Matriz de covariância da amostra segue uma dis
 
 ## c) 4.22 {-}
 
+Seja $X_{1},X_{2}...X_{75}$ uma amostra aleatória de tamano 60 de uma distribuição normal de quatro variantes com média $\mu$ e covariancia. Qual é a distribuição aproximada de cada componente a seguir:
+
+a) Distribuição do $\bar{X}$:
+
+Considerando que n=75 é um tamanho suficientemente grande, pelo teorema central do limite sabemos que a distribuição de $\sqrt{n}(\mathbf{X}-\mathbf{\mu})$ é aproximadamente $N(0,\sum)$ e que $\mathbf{\bar{X}}$ é aproximadamente $N(\mathbf{\mu},\frac{1}{n}\sum)$.
+
+b) $n(\mathbf{\bar{X}}-\mathbf{\mu})'\mathbf{S}^{-1}(\mathbf{\bar{X}}-\mathbf{\mu})$
+Segue aproximadamente uma $\chi_{p}^{2}$
 
 
 # Exercício 3
