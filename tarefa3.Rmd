@@ -1,0 +1,477 @@
+---
+title: "TAREFA  3 - Análise Multivariada"
+author: "Márcia H. Barbian"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+---
+
+
+# Exercício 1
+
+Os banco de dados do exercício (FIFA 2018 Statistics) é composto por variáveis de jogos de futebol de várias seleções no ano de 2018.Os dados estão disponíveis no link [https://www.kaggle.com/mathan/fifa-2018-match-statistics]. 
+Considere somente as seguintes variáveis:
+
+*$X_1=$Ball Possession %: Amount of time ball was in control by the team
+
+*$X_2=$Attempts: Number of attempts to score goal
+
+*$X_3=$On-Target: Number of shots on-target
+
+*$X_4=$Off-Target: Number of shots that went off-target
+
+```{R dados, include = FALSE}
+library(readr)
+df <- read_csv("C:/Users/Diogo/Desktop/Trabalho 2/FIFA 2018 Statistics.csv")
+df <- df[c("Ball Possession %", "Attempts", "On-Target", "Off-Target")]
+```
+
+## a)
+Faça 3 gráficos diferentes para esse conjunto de dados.
+
+```{R}
+library(GGally)
+
+ggpairs(
+  df,
+  title = "Análise de Relação entre Variáveis do FIFA 2018",
+  progress = FALSE  # Remove a barra de progresso (opcional)
+)
+
+library(pheatmap)
+
+matriz_cor <- cor(df)
+pheatmap(matriz_cor,
+         color = colorRampPalette(c("lightblue", "white", "tomato"))(50),
+         display_numbers = TRUE,
+         number_format = "%.2f",
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         main = "Heatmap de Correlação (pheatmap)")
+
+
+library(ggExtra)
+ 
+p <- ggplot(df, aes(x=df$`Ball Possession %`, y=df$Attempts, size = df$`On-Target`)) +
+      geom_point() +
+      theme(legend.position="none")
+ 
+
+p2 <- ggMarginal(p, type="density")
+
+p2
+    
+
+```
+
+
+## b) 
+Podemos dizer que as variáveis acima possuem distribuição normal multivariada? 
+
+```{R}
+testar_normalidade <- function(data) {
+  resultados <- lapply(data, function(coluna) {
+    if (is.numeric(coluna)) {
+      list(
+        Shapiro_Wilk = shapiro.test(coluna)$p.value,
+        Anderson_Darling = nortest::ad.test(coluna)$p.value,
+        Kolmogorov_Smirnov = ks.test(coluna, "pnorm", mean(coluna), sd(coluna))$p.value
+      )
+    } else {
+      NULL
+    }
+  })
+  return(resultados)
+}
+
+library(nortest)  
+resultados <- testar_normalidade(df)
+
+resultados
+
+
+# Ball Possession é aproximadamente normal
+
+# Attempts não é normal
+
+# `On-Target` não é normal
+
+# `Off-Target` não é normal
+```
+
+## c) 
+Há algum outlier nesse banco de dados? Justifique a sua resposta.
+
+Uitlizando ferramentas como Box-plot, histograma e Z-score não foram identificados outliers. Porém ao utilizar a distância de mahalanobis encontramos 7 observações. Como estamos no contexto de dados multivariados a distância de mahalanobis deve ser priorizada e portando sim existem outliers no banco.
+
+```{R}
+# Box-plot
+boxplot(df, main = "Boxplot para verificar outliers", ylab = "Valores")
+
+# Histograma
+hist(df$`Ball Possession %`, main = "Histograma da variável", xlab = "Valores", breaks = 30)
+hist(df$Attempts, main = "Histograma da variável", xlab = "Valores", breaks = 30)
+hist(df$`On-Target`, main = "Histograma da variável", xlab = "Valores", breaks = 30)
+hist(df$`Off-Target`, main = "Histograma da variável", xlab = "Valores", breaks = 30)
+
+# Z-Score
+z_scores <- scale(df$`Ball Possession %`)
+outliers <- which(abs(z_scores) > 3) 
+df[outliers, ]
+
+z_scores <- scale(df$Attempts)
+outliers <- which(abs(z_scores) > 3) 
+df[outliers, ]
+
+z_scores <- scale(df$`On-Target`)
+outliers <- which(abs(z_scores) > 3) 
+df[outliers, ]
+
+z_scores <- scale(df$`Off-Target`)
+outliers <- which(abs(z_scores) > 3) 
+df[outliers, ]
+
+
+# Distância de mahalanobis para dados multivariados
+cov_matrix <- cov(df)
+center <- colMeans(df)
+mahal <- mahalanobis(df, center, cov_matrix)
+
+threshold <- qchisq(0.99, df = ncol(df))
+outliers <- which(mahal > threshold)
+df[outliers, ]
+```
+
+
+## d)
+Independentemente da resposta das letras b e c, CONSIDERE QUE O VETOR $X = (X_1, X_2, X_3, X_4)$ SEJA NORMALMENTE DISTRIBUÍDO $N_4(\mu,\Sigma)$.
+Qual a distribuição e os parâmetros de $X_1/X_2,X_3,X_4$?
+ 
+A distribuição é normal multivariada com vetor de médias $\mu = (50,12.60, 3.91, 5.27)^{t}$ e matriz de variância e covariância:
+$$\sum = \begin{bmatrix}
+109 & 30 & 7 & 9 \\
+30 & 29 & 9 & 9 \\
+7 & 9 & 5 & 2 \\
+9 & 9 & 2 & 6 \\
+\end{bmatrix}$$.
+ 
+```{R teste}
+mean(df$`Ball Possession %`)
+mean(df$Attempts)
+mean(df$`On-Target`)
+mean(df$`Off-Target`)
+
+
+matriz_cov <- cov(df)
+matriz_cov
+```
+
+## e)
+Independentemente da resposta das letras b e c, CONSIDERE QUE O VETOR $X = (X_1, X_2, X_3, X_4)$ SEJA NORMALMENTE DISTRIBUÍDO $N_4(\mu,\Sigma)$.
+Qual a distribuição e os parâmetros de $X_1/X_3,X_4$?
+
+Normal multivariada com vetor de médias $\mu = (50, 3.91, 5.27)^{t}$ e matriz de variância e covariância:
+$$\sum = \begin{bmatrix}
+109 & 7 & 9 \\
+7 & 5 & 2 \\
+9  & 2  & 6 \\
+\end{bmatrix}$$.
+
+```{R teste}
+df_teste <- df <- df[c("Ball Possession %", "On-Target", "Off-Target")]
+matriz_cov <- cov(df_teste)
+matriz_cov
+```
+
+## f)
+Comente sobre a diferença entre as distribuições das letras a e b.
+
+Embora as distribuições apresentem forma aparentemente normal em análises gráficas, os testes de hipóteses (como Shapiro-Wilk ou Kolmogorov-Smirnov ou Anderson Darling) estão rejeitando a normalidade. Isso provavelmente ocorre devido a presença de outliers que inflacionam a variância.
+
+## g) 
+Se você tivesse que predizer o valor da variável _$X_1=$Ball Possession %_ e pudesse escolher uma preditora entre $X_2$, $X_3$ e $X_4$, qual você escolheria? Por quê?
+
+Escolheria a variável 'Attempts', por conta de ter uma maior relação linear que as demais.
+
+# Exercício 2
+
+Mostre que $Cov(AY) = ACov(Y)A'$
+
+$$
+Cov(AY)= E[(AY-E(AY))(AY-E(AY))']
+$$
+Precisamo de $E(AY)$, temos que $E(AY)=AE(Y)=A\mu$ e portanto:
+
+$$
+Cov(AY)= E[(AY-A\mu)(AY-A\mu)'] = E[A(Y-\mu)(A(Y-\mu))'] = E[A(Y-\mu)A'(Y-\mu)']
+$$
+$$
+= AE[(Y-\mu)(Y-\mu)']A'=A\sum A'=ACov(Y)A'
+$$
+
+# Exercício 3
+
+Cite 4 propriedades da normal multivariada.
+
+- Combinação lineares são Normais
+- Maginais preserva normalidade
+- Independencia <-> convariância Nula
+- Distribuição condicional é normal
+
+
+# Exercício 4
+
+ Este conjunto de dados aborda o desempenho estudantil no ensino secundário de duas escolas portuguesas. Os atributos incluem notas dos estudantes, características demográficas, sociais e relacionadas à escola, e foram coletados por meio de boletins escolares e questionários [disponível no link](https://archive.ics.uci.edu/dataset/320/student+performance). O objetivo deste exercício é verificar o que poderia influenciar o desempenho acadêmico (notas), o tempo de estudo e o número de faltas dos estudantes.
+OBS: Não se esqueça de avaliar se já observações com valores ausentes, se sim, remova-as.
+
+
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+# Ler a base 
+student_data <- read.csv("student-mat.csv", sep = ";")
+
+```
+
+## a)
+Avalie se o envolvimento em um relacionamento amoroso (variável romantic) influencia na média das variáveis G1 (notas), G2 (notas),  studytime (tempo de estudo semanal) e absences (número de faltas).
+
+### I) Escolha o tipo de teste adequado. Qual a distribuição de probabilidade desse teste?
+
+<span style="color:blue"> Como queremos avaliar o envolvimento de um relacionamento amoroso influencia SIMULTANEAMENTE em mais de uma variável dependente, o teste adequado é o MANOVA. Que segue aproximadamente uma distribuição F. </span>
+
+Fazendo um teste MANOVA:
+```{r}
+
+st.data <- na.omit(student_data)
+
+nrow(st.data)
+head(st.data)
+
+manova <- manova(cbind(G1, G2, studytime, absences) ~ romantic, data = st.data)
+summary(manova)
+
+```
+
+### II) Quais as suposições para utilizar esse teste?
+
+As principais suposições para o teste MANOVA são:
+
+1. Normalidade multivariada: As variáveis dependentes devem seguir uma distribuição normal multivariada.
+2. Homogeneidade de variâncias-covariâncias: As matrizes de variância-covariância das variáveis dependentes devem ser homogêneas entre os grupos.
+3. Independência: As observações devem ser independentes entre si.
+4. Linearidade: As relações entre as variáveis dependentes devem ser lineares.
+5. Ausência de multicolinearidade: As variáveis dependentes não devem ser altamente correlacionadas entre si.
+
+
+
+### III) Quais as hipóteses?
+
+- $H_0$: As médias multivariadas das variáveis dependentes (G1, G2, studytime e abcenses) são iguais entre os grupos definidos pela variável romantic.
+- $H_1$: Pelo menos uma média multivariada das variáveis dependentes (G1, G2, studytime e abcenses) é diferente entre os grupos definidos pela variável romantic.
+
+### IV) Qual o p-valor? Qual a decisão com relação às hipóteses? Qual a conclusão experimental?
+
+
+O p-valor obtido no teste MANOVA foi **0.0003197**.
+
+Como o p-valor é menor que 0,05, rejeitamos a hipótese nula ($H_0$) de que as médias multivariadas das variáveis dependentes (G1, G2, studytime e absences) são iguais entre os grupos definidos pela variável `romantic`.
+
+**Conclusão experimental:**  
+Há evidências estatísticas de que o envolvimento em um relacionamento amoroso influencia, de forma conjunta, pelo menos uma das médias das variáveis G1, G2, studytime ou absences.
+
+
+### V) Qual o tamanho da amostra? Qual o número de variáveis utilizado nesse teste?
+
+O tamanho da amostra utilizada no teste MANOVA foi de **395** observações (após remoção dos valores ausentes).
+
+O número de variáveis dependentes analisadas foi **4**: G1, G2, studytime e absences.
+
+## b)
+
+Avalie se a razão pela escolha da escola (variável reason) influencia na média das variáveis variáveis G1 (notas), G2 (notas),  studytime (tempo de estudo semanal) e absences (número de faltas).
+
+```{r}
+
+manova.reason <- manova(cbind(G1, G2, studytime, absences) ~ reason, data = st.data)
+summary(manova.reason)
+
+```
+
+### I) Escolha o tipo de teste adequado. Qual a distribuição de probabilidade desse teste?
+
+
+Como o objetivo é avaliar se diferentes categorias da variável qualitativa reason estão associadas a diferenças simultâneas nas médias de múltiplas variáveis quantitativas (como na questão anterior) teste adequado permanece sendo a  MANOVA.
+
+Segue aproximadamente uma distribuição F.
+
+### II) Quais as suposições para utilizar esse teste?
+
+(as mesmas o item anterior)
+1. Normalidade multivariada: As variáveis dependentes devem seguir uma distribuição normal multivariada.
+2. Homogeneidade de variâncias-covariâncias: As matrizes de variância-covariância das variáveis dependentes devem ser homogêneas entre os grupos.
+3. Independência: As observações devem ser independentes entre si.
+4. Linearidade: As relações entre as variáveis dependentes devem ser lineares.
+5. Ausência de multicolinearidade: As variáveis dependentes não devem ser altamente correlacionadas entre si.
+
+
+
+### III) Dado essas suposições, o teste é robusto para quais delas?
+
+A MANOVA é considerada relativamente robusta a pequenas violações da normalidade multivariada, especialmente quando os tamanhos dos grupos são semelhantes e a amostra é grande. No entanto, o teste **não é robusto** à violação da homogeneidade das matrizes de variância-covariância .
+
+
+### IV) Quais são as hipóteses?
+
+- $H_0$: As médias multivariadas das variáveis dependentes (G1, G2, studytime e absences) são iguais entre todos os grupos definidos pela variável reason.
+- $H_1$: Pelo menos uma média multivariada das variáveis dependentes (G1, G2, studytime e absences) é diferente para pelo menos um dos grupos definidos pela variável reason.
+
+### V) Qual o p-valor? Qual a decisão com relação às hipóteses? Qual a conclusão experimental?
+
+O p-valor obtido no teste MANOVA para a variável reason foi **0.0001379**.
+
+Como o p-valor é menor que 0,05, rejeitamos a hipótese nula ($H_0$) de que as médias multivariadas das variáveis dependentes (G1, G2, studytime e absences) são iguais entre todos os grupos definidos pela variável `reason`.
+
+**Conclusão experimental:**  
+Há evidências estatísticas de que a razão pela escolha da escola influencia, de forma conjunta, pelo menos uma das médias das variáveis G1, G2, studytime ou absences.
+
+### VI) Qual o tamanho da amostra? Qual o número de variáveis utilizado nesse teste?
+
+O tamanho da amostra utilizada no teste MANOVA foi de **395** observações (após remoção dos valores ausentes).
+
+O número de variáveis dependentes analisadas foi **4**: G1, G2, studytime e absences.
+
+## c)
+Faça gráficos para auxiliar nas respotas das letras a e b.
+
+```{r}
+library(ggplot2)
+library(tidyr)
+
+dados_long_a <- st.data %>%
+  pivot_longer(cols = c(G1, G2, studytime, absences),
+               names_to = "Variavel", values_to = "Valor")
+
+# Gráfico para a) (romantic)
+ggplot(dados_long_a, aes(x = romantic, y = Valor, fill = romantic)) +
+  geom_boxplot() +
+  facet_wrap(~Variavel, scales = "free") +
+  labs(title = "Distribuição das variáveis por relacionamento amoroso",
+       x = "Relacionamento amoroso", y = "Valor") +
+  theme_minimal()
+
+# Gráficos para b) (reason)
+dados_long_b <- st.data %>%
+  pivot_longer(cols = c(G1, G2, studytime, absences),
+               names_to = "Variavel", values_to = "Valor")
+
+ggplot(dados_long_b, aes(x = reason, y = Valor, fill = reason)) +
+  geom_boxplot() +
+  facet_wrap(~Variavel, scales = "free") +
+  labs(title = "Distribuição das variáveis por razão da escolha da escola",
+       x = "Razão da escolha da escola", y = "Valor") +
+  theme_minimal()
+
+```
+
+Os gráficos de boxplot nos dão um reforço visual nos resultados dos testes estatísticos! Eles mostram que tanto o envolvimento em um relacionamento amoroso quando a razão pela escolha de escola estão associados a diferenças médias das variáveis acadêmicas analisadas!
+
+# Exercício 5
+
+O que é o TCL multivariado? Qual a sua importância?
+
+
+O **TCL multivariado**  como vimos em aula é uma generalização do Teorema Central do Limite para vetores aleatórios. Ele afirma que, sob certas condições, a soma (ou média) de vetores aleatórios independentes e identicamente distribuídos converge em distribuição para uma distribuição normal multivariada, à medida que o tamanho da amostra aumenta. (Como o TCL clássico que ja conhecemos, agora somente no contexto multivariado).
+
+**Importância:**  
+O TCL multivariado é fundamental porque justifica o uso de métodos estatísticos baseados na normalidade multivariada, mesmo quando a distribuição original dos dados não é normal, desde que a amostra seja suficientemente grande. Ele permite a aplicação de testes e intervalos de confiança multivariados em diversas áreas da estatística multivariada.
+
+# Exercício 6
+
+
+Os banco de dados do exercício (FIFA 2018 Statistics) é composto por variáveis de jogos de futebol de várias seleções no ano de 2018.Os dados estão disponíveis no link [https://www.kaggle.com/mathan/fifa-2018-match-statistics]. 
+
+Considere as seguintes variáveis:
+
+*$X_1=$Ball Possession %: Amount of time ball was in control by the team
+
+*$X_2=$Attempts: Number of attempts to score goal
+
+*$X_3=$On-Target: Number of shots on-target
+
+*$X_4=$Off-Target: Number of shots that went off-target
+
+## a) 
+Faça o gráfico de correlação e o ggpairs dos dados.
+
+## b)
+Faça o PCA utilizando a matriz de correlação. Porque é preferível utilizar a matriz de correlação em vez da matriz de covariância?
+
+## c) 
+Quantas componentes você utilizaria na análise? Por quê?
+
+## d) 
+Interprete adequadamente as componentes principais utilizadas e indique graficamente a composição dos componentes principais.
+
+
+## e)
+Indique a fórmula de cada uma das componentes principais utilizadas. Qual o número de observações de cada uma dessas componentes?
+
+## f) 
+Interprete o Biplot.
+
+
+## g)  
+Faria sentido fazer a ACP se não houvesse correlação entre as variáveis?
+
+
+# Exercício 7
+
+Considere o banco de dados que aborda o desempenho estudantil no ensino secundário de duas escolas portuguesas. Os atributos incluem notas dos estudantes, características demográficas, sociais e relacionadas à escola, e foram coletados por meio de boletins escolares e questionários [disponível no link](https://archive.ics.uci.edu/dataset/320/student+performance)
+OBS: Não se esqueça de avaliar se já observações com valores ausentes, se sim, remova-as.
+
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+# Ler a base (baixe de https://archive.ics.uci.edu/ml/datasets/Student+Performance)
+student_data <- read.csv("student-mat.csv", sep = ";")
+
+```
+
+
+Considere as seguintes variáveis:
+
+*$X_1=$ age
+
+*$X_2=$ traveltime
+
+*$X_3=$ studytime
+
+*$X_4=$ absences
+
+*$X_5=$ G1
+
+*$X_6=$ G2
+
+## a) 
+Faça o gráfico de correlação e o ggpairs dos dados.
+
+## b)
+Faça o PCA utilizando a matriz de correlação.
+
+## c) 
+Quantas componentes você utilizaria na análise? Por quê?
+
+## d) 
+Indique graficamente a composição dos componentes principais e interprete adequadamente as componentes principais utilizadas.
+
+## e) 
+Interprete o Biplot.
+
+## f)  
+Considere se o aluno ou aluna está ou não em um relacionamento amoroso (variável romantic), refaça o biplot e avalie se há ou não há diferença entre essas duas classes.
