@@ -449,6 +449,7 @@ Indique a fórmula de cada uma das componentes principais utilizadas. Qual o nú
 ```{r}
 pca$rotation[,1:3]
 ```
+
 $$PC_1 = 0.42*X_1 + 0.60*X_2 + 0.47*X_3 +0.48*X_4\\
 PC_2 = 0.68*X_1 -0.12*X_2 - 0.68*X_3 + 0.22*X_4 \\
 PC_3 = 0.57*X_1 - 0.07*X_2 + 0.34*X_3 - 0.74*X_4\\$$
@@ -458,7 +459,9 @@ Interprete o Biplot.
 ```{r}
 fviz_pca_biplot(pca, label = "var") 
 ```
+
 - O primeiro componente encapsula mais de metade da variabilidade total dos dados, logo todas as variáveis apontam em sua direção com $X_1$ e $X_3$ apresentando a maior contribuição para o segundo componente. Não há um padrão claro nos dados.
+
 ## g)  
 Faria sentido fazer a ACP se não houvesse correlação entre as variáveis?
 
