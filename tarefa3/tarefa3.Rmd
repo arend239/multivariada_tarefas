@@ -7,6 +7,20 @@ output:
     toc_float: TRUE
 ---
 
+Alunos: Diogo, Thiago, Gabriel, Davi e João
+
+```{R, include = FALSE}
+library(ggExtra)
+library(nortest)
+library(GGally)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(factoextra)
+library(tidyr)
+library(pheatmap)
+```
+
 
 # Exercício 1
 
@@ -22,26 +36,22 @@ Considere somente as seguintes variáveis:
 *$X_4=$Off-Target: Number of shots that went off-target
 
 ```{R dados, include = FALSE}
-library(readr)
-df <- read_csv("C:/Users/Diogo/Desktop/Trabalho 2/FIFA 2018 Statistics.csv")
+df <- read_csv("FIFA 2018 Statistics.csv")
 df <- df[c("Ball Possession %", "Attempts", "On-Target", "Off-Target")]
 ```
 
 ## a)
 Faça 3 gráficos diferentes para esse conjunto de dados.
 
-```{R}
-library(GGally)
-
+```{R, warning = FALSE, message= FALSE}
 ggpairs(
   df,
   title = "Análise de Relação entre Variáveis do FIFA 2018",
   progress = FALSE  # Remove a barra de progresso (opcional)
 )
 
-library(pheatmap)
-
 matriz_cor <- cor(df)
+
 pheatmap(matriz_cor,
          color = colorRampPalette(c("lightblue", "white", "tomato"))(50),
          display_numbers = TRUE,
@@ -49,10 +59,9 @@ pheatmap(matriz_cor,
          cluster_rows = FALSE,
          cluster_cols = FALSE,
          main = "Heatmap de Correlação (pheatmap)")
+```
 
-
-library(ggExtra)
- 
+```{R, warning = FALSE, message= FALSE}
 p <- ggplot(df, aes(x=df$`Ball Possession %`, y=df$Attempts, size = df$`On-Target`)) +
       geom_point() +
       theme(legend.position="none")
@@ -61,15 +70,13 @@ p <- ggplot(df, aes(x=df$`Ball Possession %`, y=df$Attempts, size = df$`On-Targe
 p2 <- ggMarginal(p, type="density")
 
 p2
-    
-
 ```
 
 
 ## b) 
 Podemos dizer que as variáveis acima possuem distribuição normal multivariada? 
 
-```{R}
+```{R, warning = FALSE, message= FALSE}
 testar_normalidade <- function(data) {
   resultados <- lapply(data, function(coluna) {
     if (is.numeric(coluna)) {
@@ -85,7 +92,6 @@ testar_normalidade <- function(data) {
   return(resultados)
 }
 
-library(nortest)  
 resultados <- testar_normalidade(df)
 
 resultados
@@ -156,7 +162,7 @@ $$\sum = \begin{bmatrix}
 9 & 9 & 2 & 6 \\
 \end{bmatrix}$$.
  
-```{R teste}
+```{R}
 mean(df$`Ball Possession %`)
 mean(df$Attempts)
 mean(df$`On-Target`)
@@ -227,13 +233,8 @@ OBS: Não se esqueça de avaliar se já observações com valores ausentes, se s
 
 
 ```{r}
-library(readr)
-library(dplyr)
-library(ggplot2)
-
 # Ler a base 
 student_data <- read.csv("student-mat.csv", sep = ";")
-
 ```
 
 ## a)
@@ -245,7 +246,6 @@ Avalie se o envolvimento em um relacionamento amoroso (variável romantic) influ
 
 Fazendo um teste MANOVA:
 ```{r}
-
 st.data <- na.omit(student_data)
 
 nrow(st.data)
@@ -253,7 +253,6 @@ head(st.data)
 
 manova <- manova(cbind(G1, G2, studytime, absences) ~ romantic, data = st.data)
 summary(manova)
-
 ```
 
 ### II) Quais as suposições para utilizar esse teste?
@@ -295,10 +294,8 @@ O número de variáveis dependentes analisadas foi **4**: G1, G2, studytime e ab
 Avalie se a razão pela escolha da escola (variável reason) influencia na média das variáveis variáveis G1 (notas), G2 (notas),  studytime (tempo de estudo semanal) e absences (número de faltas).
 
 ```{r}
-
 manova.reason <- manova(cbind(G1, G2, studytime, absences) ~ reason, data = st.data)
 summary(manova.reason)
-
 ```
 
 ### I) Escolha o tipo de teste adequado. Qual a distribuição de probabilidade desse teste?
@@ -348,9 +345,6 @@ O número de variáveis dependentes analisadas foi **4**: G1, G2, studytime e ab
 Faça gráficos para auxiliar nas respotas das letras a e b.
 
 ```{r}
-library(ggplot2)
-library(tidyr)
-
 dados_long_a <- st.data %>%
   pivot_longer(cols = c(G1, G2, studytime, absences),
                names_to = "Variavel", values_to = "Valor")
@@ -374,7 +368,6 @@ ggplot(dados_long_b, aes(x = reason, y = Valor, fill = reason)) +
   labs(title = "Distribuição das variáveis por razão da escolha da escola",
        x = "Razão da escolha da escola", y = "Valor") +
   theme_minimal()
-
 ```
 
 Os gráficos de boxplot nos dão um reforço visual nos resultados dos testes estatísticos! Eles mostram que tanto o envolvimento em um relacionamento amoroso quando a razão pela escolha de escola estão associados a diferenças médias das variáveis acadêmicas analisadas!
@@ -404,115 +397,253 @@ Considere as seguintes variáveis:
 
 *$X_4=$Off-Target: Number of shots that went off-target
 
-```{r}
-library(GGally)
-library(dplyr)
-library(factoextra)
-dados_FIFA = read.csv("FIFA 2018 Statistics.csv", header = T)
-interesse = names(dados_FIFA)[5:8]
-dados_FIFA = dados_FIFA |>
-  dplyr::select(all_of(interesse))
-names(dados_FIFA) = c("X1","X2","X3","X4")
-```
-
 ## a) 
 Faça o gráfico de correlação e o ggpairs dos dados.
 
-```{r}
-ggpairs(dados_FIFA)
+```{R}
+df <- read_csv("FIFA 2018 Statistics.csv")
+df <- df[c("Ball Possession %", "Attempts", "On-Target", "Off-Target")]
 
-ggcorr(dados_FIFA, label = TRUE, label_round = 2)
+ggpairs(df, title = "Análise de Pares das Variáveis do FIFA 2018")
 ```
 
 ## b)
 Faça o PCA utilizando a matriz de correlação. Porque é preferível utilizar a matriz de correlação em vez da matriz de covariância?
-```{r}
-# Usando a matriz de correlação pois scale = True
-pca = prcomp(dados_FIFA, center = T, scale = T)
+
+Se as variáveis têm unidades diferentes (ex: porcentagem vs. contagem), a matriz de covariância será enviesada para variáveis com maior magnitude.
+A matriz de correlação padroniza todas as variáveis para ter média 0 e desvio padrão 1, garantindo que todas contribuam igualmente para a PCA.
+
+```{R}
+pca_result <- prcomp(df, scale. = TRUE)
+summary(pca_result)
+
+#Análisando a proporção de variancia explicada a variável X1 e X2 explicam 0.632 + 0.1815 ou seja  81% já é explicada por apenas duas variáveis, assim iremos manter apenas as dois componentes.
+
+# % da variancia explicada por cada componente
+fviz_eig(pca_result, geom = "bar", bar_width = 0.4) + ggtitle("")
 ```
 
-- É preferivel usar a matriz de correlação pois ela nega o efeito da escala das variáveis.
 
 ## c) 
 Quantas componentes você utilizaria na análise? Por quê?
-```{r}
-summary(pca)
-```
 
-- $3$ componentes, pois é possivel capturar a maior parte da variância dos dados, $97\%$, com apenas $3$ componentes, usar apenas $2$ implicaria em uma grande perda de informação.
+Utilizarei apenas nois, pois analisando o resultado do PCA podemos ver que PC1 e PC2 já explicam 81% de toda a variabilidade dos dados. 
+
+Adicionar mais componentes (PC3, PC4) aumentaria apenas marginalmente a explicação, introduzindo complexidade desnecessária.
+
+O biplot mostra que PC1 está fortemente associada a Ball Possession % e  PC2 a Attempts.
+
+Com duas componentes, é possível visualizar claramente a relação entre variáveis e observações sem perda significativa de informação.
 
 ## d) 
 Interprete adequadamente as componentes principais utilizadas e indique graficamente a composição dos componentes principais.
+
+PC1:
+
+- Standard deviation: 1.590 -> É o maior e portanto é o componente que mais influencia nos dados
+- As variáveis que contribuem para o PC1 são todas as 4.
+- Conforme BIPLOT: PC1 representa um eixo de "dominância ofensiva", times com alta pontuação em PC1 têm mais posse de bola, mais finalizações, mais finalizações certas e mais finalizações erradas. Isso sugere que está capturando bem o volume do ataque mas não discremina a precisão.
+
+PC2:
+
+- Standard deviation: 0.85 -> Menor influência que PC1, mas ainda relevante.
+- Podemos ver no BIPLOT que times que pontuam positivamente nesse componente, são times com alta posse de bola mas que finalizam com menor precisão, enquanto quem pontua com valores negativos tendem a finalizar mais e ter menos posse de bola mas com pricesão maior
+
+
+
 ```{r}
-fviz_pca_var(pca, col.var = "contrib", repel = TRUE)
+load <- pca_result$rotation
+load <- as.data.frame(load)
+load$nome <- as.factor(row.names(load))
+
+load_long <- pivot_longer(load, 
+                         cols = -nome, 
+                         names_to = "Componente", 
+                         values_to = "Loading")
+
+load_filtered <- load_long %>% 
+  filter(Componente %in% c("PC1", "PC2"))
+
+ggplot(load_filtered, aes(x = nome, y = abs(Loading), fill = Componente)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  coord_flip() + 
+  ylab("Loading Strength") + 
+  theme_bw(base_size = 10) + 
+  ggtitle("Componentes principais") +
+  theme(legend.position = "top") +
+  facet_wrap(~Componente)  
 ```
 
 ## e)
 Indique a fórmula de cada uma das componentes principais utilizadas. Qual o número de observações de cada uma dessas componentes?
-```{r}
-pca$rotation[,1:3]
-```
 
-$$PC_1 = 0.42*X_1 + 0.60*X_2 + 0.47*X_3 +0.48*X_4\\
-PC_2 = 0.68*X_1 -0.12*X_2 - 0.68*X_3 + 0.22*X_4 \\
-PC_3 = 0.57*X_1 - 0.07*X_2 + 0.34*X_3 - 0.74*X_4\\$$
+```{R}
+pca_result$rotation
+```
+$$
+PC1=0.421×BallPossession+0.604×Attempts+0.474×OnTarget+0.484×OffTarget
+$$
+$$
+PC2=0.686×BallPossession−0.123×Attempts−0.682×OnTarget+0.224×OffTarget
+$$
 
 ## f) 
 Interprete o Biplot.
-```{r}
-fviz_pca_biplot(pca, label = "var") 
+
+```{R}
+fviz_pca_biplot(pca_result, label="var",
+               addEllipses=TRUE, ellipse.level=0.95)
 ```
 
-- O primeiro componente encapsula mais de metade da variabilidade total dos dados, logo todas as variáveis apontam em sua direção com $X_1$ e $X_3$ apresentando a maior contribuição para o segundo componente. Não há um padrão claro nos dados.
+No biplot a seta "Ball Possession %" e "Attempts" estão apontando para a direita (valores positivos em PC1), significa que times com alta posse de bola têm scores altos nessa componente.
+'Attempts' está bem próxima da linha horizontal e portanto indica que pode ser explicada pelo componente PC2.
+
+Como "Ball Possession %" e 'Attempts' estão próximas, podemos indentificar que há uma correlação média entre as variáveis.
+
+Como ambas apontam para a direita temos que: Times com mais posse tendem a finalizar com mais precisão.
+
+O biplot mostra que PC1 está fortemente associada a Ball Possession % e Attempts (setas à direita), enquanto PC2 captura melhor "Attempts".
+
 
 ## g)  
 Faria sentido fazer a ACP se não houvesse correlação entre as variáveis?
 
-- Não faria o menor sentido, a ACP não traria ganho de informação algum em comparação com as variáveis originais.
+Não faria sentido aplicar se não houver correlação entre Posse de Bola e Tentativas de Gol, pois:
+
+- Não há estrutura latente a ser explorada.
+- As componentes principais seriam equivalentes às variáveis originais, sem redução ou síntese de informação.
+
 # Exercício 7
 
 Considere o banco de dados que aborda o desempenho estudantil no ensino secundário de duas escolas portuguesas. Os atributos incluem notas dos estudantes, características demográficas, sociais e relacionadas à escola, e foram coletados por meio de boletins escolares e questionários [disponível no link](https://archive.ics.uci.edu/dataset/320/student+performance)
 OBS: Não se esqueça de avaliar se já observações com valores ausentes, se sim, remova-as.
 
 ```{r}
-library(readr)
-library(dplyr)
-library(ggplot2)
-
 # Ler a base (baixe de https://archive.ics.uci.edu/ml/datasets/Student+Performance)
 student_data <- read.csv("student-mat.csv", sep = ";")
-
 ```
 
 
 Considere as seguintes variáveis:
 
-*$X_1=$ age
+*$X_1=$ age : idade do estudante
 
-*$X_2=$ traveltime
+*$X_2=$ traveltime: home to school travel time
 
-*$X_3=$ studytime
+*$X_3=$ studytime: weekly study time
 
-*$X_4=$ absences
+*$X_4=$ absences: number of school absences
 
-*$X_5=$ G1
+*$X_5=$ G1:first period grade
 
-*$X_6=$ G2
+*$X_6=$ G2: second period grade
 
 ## a) 
 Faça o gráfico de correlação e o ggpairs dos dados.
 
+```{R}
+student_data <- student_data[c("age", "traveltime", "studytime", "absences", "G1", "G2")]
+ggpairs(student_data, title = "Análise de Pares das Variáveis do STUDENT data")
+```
+
 ## b)
 Faça o PCA utilizando a matriz de correlação.
 
+
+```{R}
+pca_result <- prcomp(student_data, scale. = TRUE)
+summary(pca_result)
+```
+
+
 ## c) 
+
 Quantas componentes você utilizaria na análise? Por quê?
+
+Usaria 4 de 6 componentes, o sexto componente tem apenas 0.02363 da proporção da variação explicada, e para simplificar podemos retirar o componente 5 para ficar com 85% da variancia explicada.
 
 ## d) 
 Indique graficamente a composição dos componentes principais e interprete adequadamente as componentes principais utilizadas.
 
+```{R}
+load <- pca_result$rotation
+load <- as.data.frame(load)
+
+load$nome <- as.factor(row.names(load))
+
+load_long <- pivot_longer(load, 
+                         cols = -nome, 
+                         names_to = "Componente", 
+                         values_to = "Loading")
+
+
+load_filtered <- subset(load_long, Componente %in% c("PC1", "PC2"))
+
+ggplot(load_filtered, aes(x = nome, y = abs(Loading), fill = Componente)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  coord_flip() + 
+  ylab("Loading Strength") + 
+  theme_bw(base_size = 10) + 
+  ggtitle("Componentes principais") +
+  theme(legend.position = "top")
+```
+
+
 ## e) 
 Interprete o Biplot.
 
+```{R}
+# Biplot
+fviz_pca_biplot(pca_result, label="var",
+               addEllipses=TRUE, ellipse.level=0.95)
+```
+
+Conforme o Biplot temos que considerando:
+
+- PC1:
+As variáveis "Absences" "Age" e "traveltime" são positivas. Essas variáveis estão associadas a comportamentos menos acadêmicos (mais faltas, mais tempo gasto no deslocamento, idade mais avançada).
+Enquanto "G1", "G2" e "studytime" negativas. Essas variáveis estão associadas a desempenho acadêmico (mais estudo, melhores notas).
+
+Interpretação do PC1: 
+
+Alunos com mais faltas, mais velhos e com maior tempo de deslocamento tendem a estar neste lado (direita). Isso pode indicar desengajamento acadêmico (menos foco nos estudos).
+Alunos com melhores notas e que estudam mais estão associados a este lado (negativo), refletindo dedicação aos estudos.
+
+- PC2: 
+As variáveis "absences", "age", "g1", "g2" e "traveltime" são positivas e "studytime" negativa.
+
+As notas têm pouca influência no PC2, mas estão levemente associadas a alunos com mais faltas e idade avançada (possivelmente alunos que, apesar das faltas, mantêm notas médias/altas)
+
+"traveltime" e "studytime": Próximos da linha horizontal (PC2 ≈ 0), mas em lados opostos do PC1.
+Quanto maior o tempo de viagem, menor o tempo de estudo.
+
+"absences" e "age": Afastados da linha horizontal (alta influência no PC2). 
+Alunos mais velhos tendem a faltar mais
+
+"G1" e "G2": Próximas da linha horizontal (PC2 ≈ 0), mas no lado positivo. Notas do primeiro e segundo período são similares e pouco relacionadas a faltas ou idade.
+
+
 ## f)  
 Considere se o aluno ou aluna está ou não em um relacionamento amoroso (variável romantic), refaça o biplot e avalie se há ou não há diferença entre essas duas classes.
+
+```{R}
+student_data_full <- read.csv("student-mat.csv", sep = ";")
+
+student_data <- student_data_full[c("age", "traveltime", "studytime", "absences", "G1", "G2", "romantic")]
+
+student_data <- na.omit(student_data)
+
+pca_result <- prcomp(student_data[,1:6], scale. = TRUE)
+
+fviz_pca_biplot(pca_result, 
+                label = "var",
+                habillage = student_data$romantic,
+                addEllipses = TRUE,
+                ellipse.level = 0.95,
+                title = "Biplot com agrupamento por status de relacionamento",
+                palette = c("#00AFBB", "#FC4E07")) +
+  theme_minimal()
+
+```
+
+A sobreposição das elipses sugere que, nesse conjunto de variáveis e componentes, não há diferença clara entre alunos com e sem relacionamento. Isso não descarta que romantic possa influenciar outras dimensões não capturadas pelo PC1 e PC2.
