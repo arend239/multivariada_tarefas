@@ -404,30 +404,65 @@ Considere as seguintes variáveis:
 
 *$X_4=$Off-Target: Number of shots that went off-target
 
+```{r}
+dados_FIFA = read.csv("FIFA 2018 Statistics.csv", header = T)
+interesse = names(dados_FIFA)[5:8]
+dados_FIFA = dados_FIFA |>
+  dplyr::select(all_of(interesse))
+names(dados_FIFA) = c("X1","X2","X3","X4")
+```
+
 ## a) 
 Faça o gráfico de correlação e o ggpairs dos dados.
 
+```{r}
+ggpairs(dados_FIFA)
+
+ggcorr(dados_FIFA, label = TRUE, label_round = 2)
+```
+
 ## b)
 Faça o PCA utilizando a matriz de correlação. Porque é preferível utilizar a matriz de correlação em vez da matriz de covariância?
+```{r}
+# Usando a matriz de correlação pois scale = True
+pca = prcomp(dados_FIFA, center = T, scale = T)
+```
+
+- É preferivel usar a matriz de correlação pois ela nega o efeito da escala das variáveis.
 
 ## c) 
 Quantas componentes você utilizaria na análise? Por quê?
+```{r}
+summary(pca)
+```
+
+- $3$ componentes, pois é possivel capturar a maior parte da variância dos dados, $97\%$, com apenas $3$ componentes, usar apenas $2$ implicaria em uma grande perda de informação.
 
 ## d) 
 Interprete adequadamente as componentes principais utilizadas e indique graficamente a composição dos componentes principais.
-
+```{r}
+fviz_pca_var(pca, col.var = "contrib", repel = TRUE)
+```
 
 ## e)
 Indique a fórmula de cada uma das componentes principais utilizadas. Qual o número de observações de cada uma dessas componentes?
+```{r}
+pca$rotation[,1:3]
+```
+$$PC_1 = 0.42*X_1 + 0.60*X_2 + 0.47*X_3 +0.48*X_4\\
+PC_2 = 0.68*X_1 -0.12*X_2 - 0.68*X_3 + 0.22*X_4 \\
+PC_3 = 0.57*X_1 - 0.07*X_2 + 0.34*X_3 - 0.74*X_4\\$$
 
 ## f) 
 Interprete o Biplot.
-
-
+```{r}
+fviz_pca_biplot(pca, label = "var") 
+```
+- O primeiro componente encapsula mais de metade da variabilidade total dos dados, logo todas as variáveis apontam em sua direção com $X_1$ e $X_3$ apresentando a maior contribuição para o segundo componente. Não há um padrão claro nos dados.
 ## g)  
 Faria sentido fazer a ACP se não houvesse correlação entre as variáveis?
 
-
+- Não faria o menor sentido, a ACP não traria ganho de informação algum em comparação com as variáveis originais.
 # Exercício 7
 
 Considere o banco de dados que aborda o desempenho estudantil no ensino secundário de duas escolas portuguesas. Os atributos incluem notas dos estudantes, características demográficas, sociais e relacionadas à escola, e foram coletados por meio de boletins escolares e questionários [disponível no link](https://archive.ics.uci.edu/dataset/320/student+performance)
