@@ -405,6 +405,9 @@ Considere as seguintes variáveis:
 *$X_4=$Off-Target: Number of shots that went off-target
 
 ```{r}
+library(GGally)
+library(dplyr)
+library(factoextra)
 dados_FIFA = read.csv("FIFA 2018 Statistics.csv", header = T)
 interesse = names(dados_FIFA)[5:8]
 dados_FIFA = dados_FIFA |>
