@@ -7,7 +7,7 @@ output:
     toc_float: TRUE
 ---
 
-Alunos: Diogo, Thiago, Gabriel, Davi e João
+Alunos: Davi Augusto, Diogo Bolzan, Gabriel Netto, João Arend e Thiago Schedler.
 
 ```{R, include = FALSE}
 library(ggExtra)
@@ -36,6 +36,7 @@ Considere somente as seguintes variáveis:
 *$X_4=$Off-Target: Number of shots that went off-target
 
 ```{R dados, include = FALSE}
+
 df <- read_csv("FIFA 2018 Statistics.csv")
 df <- df[c("Ball Possession %", "Attempts", "On-Target", "Off-Target")]
 ```
@@ -153,42 +154,38 @@ df[outliers, ]
 ## d)
 Independentemente da resposta das letras b e c, CONSIDERE QUE O VETOR $X = (X_1, X_2, X_3, X_4)$ SEJA NORMALMENTE DISTRIBUÍDO $N_4(\mu,\Sigma)$.
 Qual a distribuição e os parâmetros de $X_1/X_2,X_3,X_4$?
- 
-A distribuição é normal multivariada com vetor de médias $\mu = (50,12.60, 3.91, 5.27)^{t}$ e matriz de variância e covariância:
-$$\sum = \begin{bmatrix}
-109 & 30 & 7 & 9 \\
-30 & 29 & 9 & 9 \\
-7 & 9 & 5 & 2 \\
-9 & 9 & 2 & 6 \\
-\end{bmatrix}$$.
- 
-```{R}
-mean(df$`Ball Possession %`)
-mean(df$Attempts)
-mean(df$`On-Target`)
-mean(df$`Off-Target`)
 
+A distribuição será: 
+$$
+N(\mu_1 + \Sigma_{12}\Sigma_{22}^{-1}(x_2 - \mu_2), \Sigma_{11} -\Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21} )
+$$
+Sendo;
+$$
+\mu_1 = \text{média de } X_1 \\
+\mu_2 = \text{vetor de médias de }X_2,X_3,X_4\\
+\Sigma_{11} = \text{variância de }X_1\\
+\Sigma_{12} = \Sigma_{21}^T = \text { matriz de covariâncias de } X_1 \text{ com } X_2,X_3,X_4 \\
+\Sigma_{22} = \text{matriz de covariâncias } X_2,X_3,X_4
+$$
 
-matriz_cov <- cov(df)
-matriz_cov
-```
+Nota-se que para saber o $\mu$ precisamos do valor observado das condicionais.
 
 ## e)
 Independentemente da resposta das letras b e c, CONSIDERE QUE O VETOR $X = (X_1, X_2, X_3, X_4)$ SEJA NORMALMENTE DISTRIBUÍDO $N_4(\mu,\Sigma)$.
 Qual a distribuição e os parâmetros de $X_1/X_3,X_4$?
 
-Normal multivariada com vetor de médias $\mu = (50, 3.91, 5.27)^{t}$ e matriz de variância e covariância:
-$$\sum = \begin{bmatrix}
-109 & 7 & 9 \\
-7 & 5 & 2 \\
-9  & 2  & 6 \\
-\end{bmatrix}$$.
+Mesma ideia da anterior mas mudamos os parâmetros, a distribuição será; 
 
-```{R teste}
-df_teste <- df <- df[c("Ball Possession %", "On-Target", "Off-Target")]
-matriz_cov <- cov(df_teste)
-matriz_cov
-```
+$$
+N(\mu_1 + \Sigma_{12}\Sigma_{22}^{-1}(x_2 - \mu_2), \Sigma_{11} -\Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21} )
+$$
+$$
+\mu_1 = \text{média de } X_1 \\
+\mu_2 = \text{vetor de médias de }X_3,X_4\\
+\Sigma_{11} = \text{variância de }X_1\\
+\Sigma_{12} = \Sigma_{21}^T = \text { matriz de covariâncias de } X_1 \text{ com } X_3,X_4 \\
+\Sigma_{22} = \text{matriz de covariâncias }X_3,X_4
+$$
 
 ## f)
 Comente sobre a diferença entre as distribuições das letras a e b.
