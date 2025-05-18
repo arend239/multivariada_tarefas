@@ -405,6 +405,9 @@ df <- read_csv("FIFA 2018 Statistics.csv")
 df <- df[c("Ball Possession %", "Attempts", "On-Target", "Off-Target")]
 
 ggpairs(df, title = "Análise de Pares das Variáveis do FIFA 2018")
+
+ggcorr(df, label = TRUE, label_round = 2)
+
 ```
 
 ## b)
@@ -427,7 +430,7 @@ fviz_eig(pca_result, geom = "bar", bar_width = 0.4) + ggtitle("")
 ## c) 
 Quantas componentes você utilizaria na análise? Por quê?
 
-Utilizarei apenas nois, pois analisando o resultado do PCA podemos ver que PC1 e PC2 já explicam 81% de toda a variabilidade dos dados. 
+Utilizarei apenas dois, pois analisando o resultado do PCA podemos ver que PC1 e PC2 já explicam 81% de toda a variabilidade dos dados. 
 
 Adicionar mais componentes (PC3, PC4) aumentaria apenas marginalmente a explicação, introduzindo complexidade desnecessária.
 
@@ -440,14 +443,14 @@ Interprete adequadamente as componentes principais utilizadas e indique graficam
 
 PC1:
 
-- Standard deviation: 1.590 -> É o maior e portanto é o componente que mais influencia nos dados
+- Standard deviation: 1.590 -> É o maior e portanto é o componente que mais influencia nos dados.
 - As variáveis que contribuem para o PC1 são todas as 4.
-- Conforme BIPLOT: PC1 representa um eixo de "dominância ofensiva", times com alta pontuação em PC1 têm mais posse de bola, mais finalizações, mais finalizações certas e mais finalizações erradas. Isso sugere que está capturando bem o volume do ataque mas não discremina a precisão.
+- Conforme BIPLOT: PC1 representa um eixo de "dominância ofensiva", times com alta pontuação em PC1 têm mais posse de bola, mais finalizações, mais finalizações certas e mais finalizações erradas. Isso sugere que está capturando bem o volume do ataque mas não discrimina a precisão.
 
 PC2:
 
 - Standard deviation: 0.85 -> Menor influência que PC1, mas ainda relevante.
-- Podemos ver no BIPLOT que times que pontuam positivamente nesse componente, são times com alta posse de bola mas que finalizam com menor precisão, enquanto quem pontua com valores negativos tendem a finalizar mais e ter menos posse de bola mas com pricesão maior
+- Podemos ver no BIPLOT que times que pontuam positivamente nesse componente, são times com alta posse de bola mas que finalizam com menor precisão, enquanto quem pontua com valores negativos tendem a finalizar mais e ter menos posse de bola mas com precisão maior.
 
 
 
@@ -498,7 +501,7 @@ fviz_pca_biplot(pca_result, label="var",
 No biplot a seta "Ball Possession %" e "Attempts" estão apontando para a direita (valores positivos em PC1), significa que times com alta posse de bola têm scores altos nessa componente.
 'Attempts' está bem próxima da linha horizontal e portanto indica que pode ser explicada pelo componente PC2.
 
-Como "Ball Possession %" e 'Attempts' estão próximas, podemos indentificar que há uma correlação média entre as variáveis.
+Como "Ball Possession %" e 'Attempts' estão próximas, podemos identificar que há uma correlação média entre as variáveis.
 
 Como ambas apontam para a direita temos que: Times com mais posse tendem a finalizar com mais precisão.
 
