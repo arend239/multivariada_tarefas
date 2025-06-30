@@ -1,0 +1,296 @@
+---
+title: "TAREFA 6 análise Fatorial e Análise de Correspondência - Análise Multivariada"
+author: "Márcia Barbian"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+
+library(dplyr)
+library(ggplot2)
+library(MASS)
+library(psych)
+library(GPArotation)
+library(tidyverse)
+library(FactoMineR)
+library(factoextra)
+```
+
+
+
+# Exercício 1
+As próximas perguntas são relacionados ao modelo fatorial ortogonal.
+
+
+## a) {-} 
+
+Indique a fórmula vetorial e matricial desse modelo, calcule sua esperança e sua variância.
+
+### Resposta
+
+**Fórmula vetorial:**
+
+$$
+  X_i = \mu_i + \lambda_{i1}F_1 + ... + \lambda_{im}F_m + \epsilon_i
+$$
+
+Considerando: 
+
+- $X_i =$ i-ésima variável observada; 
+- $\mu_i =$ média de $X_i$;
+- $\lambda_{im} =$ carga fatorial da i-ésima variável no fator m;
+- $F_m =$ m-ésimo fator;
+- $\epsilon_i =$ erro associado a i-ésima variável. 
+
+**Fórmula matricial:**
+
+$$
+\begin{bmatrix}
+X_1\\
+X_2\\
+\vdots\\
+X_p
+\end{bmatrix}
+=
+{\begin{bmatrix}
+\mu_1\\
+\mu_2\\
+\vdots\\
+\mu_p
+\end{bmatrix}}
++
+\bf{\Lambda}
+{\begin{bmatrix}
+F_1\\
+F_2\\
+\vdots\\
+F_m
+\end{bmatrix}}
++ 
+{\begin{bmatrix}
+\epsilon_1\\
+\epsilon_2\\
+\vdots\\
+\epsilon_p
+\end{bmatrix}}
+$$
+na forma reduzida: 
+
+$$
+{\bf X = \mu + \Lambda F + \epsilon}
+$$
+Considerando: 
+
+- $\bf X =$ vetor de variáveis observadas; 
+- $\bf \mu =$ vetor de médias de $\bf X$;
+- $\bf \Lambda =$ matriz ($p$ x $m$) de cargas fatoriais;
+- $\bf F =$ vetor de fatores;
+- $\bf \epsilon =$ vetor de erros. 
+
+**Esperança**
+
+$$
+E({\bf X}) = E({\bf \mu + \Lambda F + \epsilon})
+$$
+Usamos a suposição de que $E({\bf F}) = 0$ e $E({\bf \epsilon}) = 0$. Portanto: 
+
+$$
+E({\bf X}) = E({\bf\mu}) = {\bf \mu}
+$$
+
+**Variância**
+
+$$
+{\bf \Sigma} = Var({\bf X}) = E[({\bf X - \mu})({\bf X - \mu})'] \\
+{\bf \Sigma} = E[({\bf\Lambda F + \epsilon})({\bf\Lambda F + \epsilon})'] \\
+{\bf \Sigma} = E[{\bf\Lambda FF'\Lambda' + \Lambda F \epsilon' + \epsilon F' \Lambda' + \epsilon \epsilon'}]
+$$
+
+Aplicando as suposições do modelo: 
+
+$$
+FF' = I\\
+E(F \epsilon') = 0\\ 
+E(\epsilon F') = 0
+$$
+Temos que: 
+
+$$
+{\bf \Sigma = \Lambda I \Lambda + E(\epsilon \epsilon')} \\
+{\bf \Sigma = \Lambda \Lambda' + \Psi}
+$$
+
+- $\bf \Lambda \Lambda'$ é a matriz de covariâncias comuns. 
+- $\bf \Psi$ é a matriz de covariâncias específicas (erros).
+
+## b) {-}
+
+Quais as suposições desse modelo e quais partes do modelos são fixas e quais são aleatórias?
+
+### Responsta
+
+**Suposições**
+
+- Média de Fatores e Erros é zero: 
+    $E({\bf F}) = E(\epsilon) = 0$. 
+    
+- Fatores ortogonais (não correlacionados):
+    $Cov({\bf F}) = E({\bf FF'}) = I$
+  
+- Erros com média zero:
+    $E(\epsilon) = 0$
+
+- Erros não correlacionados e de mesma variância:
+    $Cov(\epsilon) = E(\epsilon \epsilon') = \Psi$
+
+- Fatores e erros independentes:
+    $Cov({\bf F}, \epsilon) = E({\bf F}\epsilon') = 0$
+  
+**Fixas**
+
+- $\mu$: Médias
+- $\Lambda$: Cargas
+- $\Psi$: Variâncias dos erros
+ 
+**Aleatórias**
+
+- $F$: Fatores
+- $\epsilon$: Erros
+
+# Exercício 2
+
+O pacote *MASS* possui um conjunto de dados _Boston_ composto por 506 observações de 14 variáveis que mensuram características de imóveis. Utilize as variáveis adequadas e responda as questôes abaixo.
+
+- crim per capita crime rate by town.
+
+- zn proportion of residential land zoned for lots over 25,000 sq.ft.
+
+- indus proportion of non-retail business acres per town.
+
+- chas Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+
+- nox nitrogen oxides concentration (parts per 10 million).
+
+- rm average number of rooms per dwelling.
+
+- age proportion of owner-occupied units built prior to 1940.
+
+- dis weighted mean of distances to five Boston employment centres.
+
+- rad index of accessibility to radial highways.
+
+- tax full-value property-tax rate per \$10,000.
+
+- ptratio pupil-teacher ratio by town.
+
+- black 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
+
+- lstat lower status of the population (percent).
+
+- medv median value of owner-occupied homes in \$1000s.
+
+```{r}
+data(Boston, package = "MASS")
+banco_dados <- Boston
+glimpse(banco_dados)
+summary(banco_dados)
+
+```
+
+## a) {-}
+
+i) Faça uma análise gráfica desse conjunto de dados. 
+ii) Dado que *m* é o número de fatores utilizado, qual o valor de *m* que você definiria para este exercício? Justifique.
+
+## b) {-}
+
+Aplique a Análise Fatorial utilizando Fatores Principais. Interprete os resultados, o que cada fator explica?
+
+## c) {-}
+
+Aplique a Análise Fatorial utilizando rotação varimax. Interprete os resultados, o que cada fator explica?
+
+## d) {-}
+
+Compare os resultados de b) e c). O que você conclui? 
+
+## e) {-}
+
+Calcule as correlações residuais de b) e c) e interprete.
+
+
+# Exercício 3
+
+O que é análise de correspondência? Quando ela deve ser utilizada?
+
+## Resposta
+
+Análise de Correspondência é uma técnica para explorar e visualizar as relações de associação entre variáveis categóricas. Criando um 'mapa' de dispersão no qual variáveis mais associadas ficam mais próximas entre si. 
+
+O principal objetivo da Análise de Correspondência é simplificar a interpretação de tabelas complexas, revelando possíveis padrões de relacionamento entre as categorias, permitindo identificar quais categorias de uma variável estão mais associadas a quais categorias de outra.
+
+A aplicação é semelhante ao PCA para dados contínuos, ou seja, quando queremos explorar associações, reduzir dimensionalidade, visualizar dados complexos...
+
+# Exercício 4
+
+O banco de dados que deve ser analisado nesse exercício é o titanic, ele é composto por variáveis referentes a características dos passageiros e tripulantes do titanic como idade, sexo e classe.
+
+Para esse exercício utilize a variável idade categorizada.
+
+
+```{r}
+#install.packages("titanic")
+library(titanic)
+data("titanic_train")
+
+# Remover NAs em Age e Embarked
+# Criar faixa etária e transformar em fatores as variáveis que estão como números
+
+base_titanic <- titanic_train %>%
+  filter(!is.na(Age), !is.na(Embarked)) %>%
+    mutate(
+      Survived = factor(Survived, labels = c("Não", "Sim")),
+      Pclass = factor(Pclass, labels = c("1ª", "2ª", "3ª")),
+      AgeGroup = cut(Age, breaks = c(0, 12, 18, 30, 50, Inf),
+                     labels = c("Criança", "Adolescente", "Jovem Adulto", "Adulto", "Idoso")),
+      Sex = factor(Sex)
+      )
+
+
+str(base_titanic)
+
+```
+
+## a)
+
+Considere as variáveis *Survived* e *Pclass*. Faça um mosaic plot e um buble plot desses dados.
+
+## b)
+
+Considere as variáveis *Survived* e *Pclass*. Faça a análise de correspondência, faça o biplot e interprete os resultados.
+
+
+## c)
+
+Considere as variáveis *Survived* e *Sex*. Faça um mosaic plot e um buble plot desses dados.
+
+## d)
+
+Considere as variáveis *Survived* e *Sex*. Faça a análise de correspondência, faça o biplot e interprete os resultados.
+
+
+## e)
+
+Considere as variáveis *Survived* e *AgeGroup*. Faça um mosaic plot e um buble plot desses dados.
+
+## f)
+
+Considere as variáveis *Survived* e *AgeGroup*. Faça a análise de correspondência, faça o biplot e interprete os resultados.
+
+## g)
+
+Qual das variáveis explica melhor a sobrevivência ou não no titanic? Se você tivesse que fazer uma análise de correspondência multipla, com 3 variáveis, quais seriam?
