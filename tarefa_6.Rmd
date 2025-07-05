@@ -9,15 +9,14 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
 ```{r}
-
-library(dplyr)
-library(ggplot2)
+library(tidyverse)
 library(MASS)
 library(psych)
 library(GPArotation)
 library(tidyverse)
 library(FactoMineR)
 library(factoextra)
+library(GGally)
 ```
 
 
@@ -196,9 +195,10 @@ O pacote *MASS* possui um conjunto de dados _Boston_ composto por 506 observaç�
 ```{r}
 data(Boston, package = "MASS")
 banco_dados <- Boston
-glimpse(banco_dados)
-summary(banco_dados)
+#glimpse(banco_dados)
+#summary(banco_dados)
 
+banco_dados <- subset(banco_dados, select = -c(chas, rad))
 ```
 
 ## a) {-}
@@ -206,21 +206,130 @@ summary(banco_dados)
 i) Faça uma análise gráfica desse conjunto de dados. 
 ii) Dado que *m* é o número de fatores utilizado, qual o valor de *m* que você definiria para este exercício? Justifique.
 
+```{R}
+ggpairs(banco_dados[, 1:7], progress = FALSE) + 
+  theme_minimal()
+
+ggpairs(banco_dados[, 8:12], progress = FALSE) + 
+  theme_minimal()
+```
+
+Para escolha do número m de fatores, um critério é considerar somente fatores que possuam autovalores maiores que 1. 
+
+```{r}
+R = cor(banco_dados)
+eigen(R)$values
+
+componentes_principais = res.pca <- prcomp(banco_dados, scale = TRUE)
+summary(componentes_principais)
+```
+Os 3 primeiros autovalores são maiores que 1 e explicam 72% da variabilidade.
+
 ## b) {-}
 
 Aplique a Análise Fatorial utilizando Fatores Principais. Interprete os resultados, o que cada fator explica?
+
+```{R}
+fatores_sem_rotacao = principal(banco_dados, nfactors = 3, rotate = "none", residuals = TRUE)
+
+print(round(fatores_sem_rotacao$communality, 2))
+```
+```{R}
+
+load=fatores_sem_rotacao$loadings[,1:3]
+load=as.data.frame(load)
+load["nome"]=as.factor(row.names(load))
+
+require(data.table)
+
+loadings.m <- melt(load, id="nome", 
+                   measure=c("PC1", "PC2", "PC3"), 
+                   variable.name="Factor", value.name="Loading")
+
+cargas_sem_rotacao = ggplot(loadings.m, aes(nome, abs(Loading), fill=Loading)) + 
+  facet_wrap(~ Factor, nrow=1) + 
+  geom_bar(stat="identity") + 
+  coord_flip() +  
+  scale_fill_gradient2(name = "Loading", 
+                       high = "blue", mid = "white", low = "red", 
+                       midpoint=0, guide=F) +
+  ylab("Loading Strength") + 
+  theme_bw(base_size=10) 
+cargas_sem_rotacao
+
+```
+
+- PC1: parece representar uma dimensão de "qualidade de vida/valor do imóvel", combinando características positivas (mais cômodos, maior valor) com fatores negativos (poluição, idade das construções).
+
+- PC2: pode representar um fator de "zonamento/desenvolvimento comercial", contrastando áreas residenciais (zn) com áreas comerciais e carga tributária.
+
+- PC3: parece capturar aspectos socioeconômicos, relacionando criminalidade e composição racial da população
 
 ## c) {-}
 
 Aplique a Análise Fatorial utilizando rotação varimax. Interprete os resultados, o que cada fator explica?
 
+```{R}
+fatores_varimax = principal(banco_dados, nfactors = 3, rotate = "varimax")
+
+print(round(fatores_varimax$communality, 2))
+
+load=fatores_varimax$loadings[,1:3]
+load=as.data.frame(load)
+load["nome"]=as.factor(row.names(load))
+
+require(data.table)
+
+loadings.m <- melt(load, id="nome", 
+                   measure=c("RC1", "RC2", "RC3"), 
+                   variable.name="Factor", value.name="Loading")
+
+cargas = ggplot(loadings.m, aes(nome, abs(Loading), fill=Loading)) + 
+  facet_wrap(~ Factor, nrow=1) + 
+  geom_bar(stat="identity") + 
+  coord_flip() + 
+  scale_fill_gradient2(name = "Loading", 
+                       high = "blue", mid = "white", low = "red", 
+                       midpoint=0, guide=F) +
+  ylab("Loading Strength") + 
+  theme_bw(base_size=10)
+
+cargas
+
+```
+
+- RC1: Este fator agrupa variáveis associadas a bairros de alto valor imobiliário, com imóveis maiores, mais novos e distantes de poluição industrial. Reflete uma dimensão de "status socioeconômico" ou "qualidade residencial".
+
+- RC2: Representa a oposição entre áreas com alta carga tributária/industrialização e zonas residenciais privilegiadas (zonas com lotes grandes). Pode ser chamado de "pressão comercial vs. residencial".
+
+- RC3: Este fator captura aspectos de segurança (criminalidade baixa) e composição racial, possivelmente refletindo segregação espacial ou desigualdades históricas.
+
+Ou seja, a rotação varimax separou claramente as variáveis em fatores temáticos distintos, eliminando sobreposições (ex: nox e age agora carregam majoritariamente no RC1, enquanto zn e tax migraram para RC2).
+
 ## d) {-}
 
 Compare os resultados de b) e c). O que você conclui? 
 
+Com a rotação varimax o RC1 agora é dominado por variáveis de valor imobiliário e qualidade de vida, enquanto RC2 foca em aspectos fiscais/zonamento. Além disso a interpretação dos fatores melhorou.
+
 ## e) {-}
 
 Calcule as correlações residuais de b) e c) e interprete.
+
+```{R}
+residuais_sem_rotacao <- fatores_sem_rotacao$residual
+
+residuais_varimax <- fatores_varimax$residual
+
+
+
+hist(residuais_sem_rotacao)
+hist(residuais_varimax, main="Residuos com varimax", xlab="Valor residual")
+```
+
+Os resíduos de ambos os fatores são os mesmos, tanto com o varimax e sem a rotação. A rotação varimax é uma transformação ortogonal que apenas reorganiza as cargas fatoriais para facilitar a interpretação. Portanto é rasoável que a distribuição resídual deva ser a mesma.
+
+Além disso, a média de ambas as distribuições é próxima de zero (0,0321) com poucos resíduos extremos, portanto não há indícios de correlações não explicadas.
 
 
 # Exercício 3
