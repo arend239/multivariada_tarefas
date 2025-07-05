@@ -19,7 +19,7 @@ library(factoextra)
 library(GGally)
 ```
 
-
+### Alunos: Diogo, Davi, João Arend, Thiago schedler e Gabriel.
 
 # Exercício 1
 As próximas perguntas são relacionados ao modelo fatorial ortogonal.
@@ -371,35 +371,161 @@ base_titanic <- titanic_train %>%
 
 
 str(base_titanic)
-
 ```
 
 ## a)
 
-Considere as variáveis *Survived* e *Pclass*. Faça um mosaic plot e um buble plot desses dados.
+Considere as variáveis Survived e Pclass. Faça um mosaic plot e um buble plot desses dados.
+```{r}
+library(vcd)
+library(ggmosaic)
+
+# mosaic plot
+
+df <- table(base_titanic$Pclass,base_titanic$Survived)
+
+mosaicplot(df,
+           main = "Mosaico Sobrevivencia Titanic Classe",
+           ylab = "Classe do Passageiro",
+           xlab = "Quantidade de Sobreviventes",
+           col = c("blue", "green"),
+           off = 10,
+           dir = c("h","v"))
+
+# bubble plot
+dados_plot <- as.data.frame(df)
+colnames(dados_plot) <- c("Pclass", "Survived", "Count")
+ggplot(dados_plot, aes(x = Pclass, y = Survived, size = Count, color = Survived)) +
+  geom_point(alpha = 0.7) +
+  scale_size_area(max_size = 20) +
+  scale_color_manual(values = c("Não" = "blue", "Sim" = "green")) +
+  labs(
+    title = "Bubble Plot de Sobrevivência por Classe (Titanic)",
+    x = "Classe do Passageiro",
+    y = "Sobreviveu",
+    size = "Número de Passageiros"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
 
 ## b)
 
-Considere as variáveis *Survived* e *Pclass*. Faça a análise de correspondência, faça o biplot e interprete os resultados.
+Considere as variáveis Survived e Pclass. Faça a análise de correspondência, faça o biplot e interprete os resultados.
+```{r}
+library(FactoMineR)
+library(factoextra)
+
+res_ca <- CA(df, graph = FALSE)
+print(res_ca)
+get_ca_row(res_ca)$contrib
+get_eigenvalue(res_ca)
+```
+- Pelo teste qui-quadrado indica que existe uma associação significativa entre a classe do passageiro e a sobrevivencia (já era possivel notar a diferença nos gráficos);
+
+- A classe que mais contribui para definir a primeira dimensão da análise é a primeira e isso sugere que o perfil de sobrevivencia das pessoas da primeira classe é muito diferente das outras 2 classes;
+
+- Apenas uma dimensão explica 100% da variação dos dados;
+
+- Para a tabela de contingência o número máximo de dimensões é dada pela formula $min(n_{linhas} -1,n_{colunas}- 1$ e como temos apenas 2 linhas (Variavel Survived = "Sim" ou "Não") o número de dimensões é 1.
+
 
 
 ## c)
+Considere as variáveis Survived e Sex. Faça um mosaic plot e um buble plot desses dados.
+```{r}
+# mosaic plot
 
-Considere as variáveis *Survived* e *Sex*. Faça um mosaic plot e um buble plot desses dados.
+df1 <- table(base_titanic$Sex,base_titanic$Survived)
+
+mosaicplot(df1,
+           main = "Mosaico Sobrevivencia Titanic Sexo",
+           ylab = "Sexo do Passageiro",
+           xlab = "Quantidade de Sobreviventes",
+           col = c("blue", "green"),
+           off = 10,
+           dir = c("h","v"))
+
+# buble plot
+dados_plot1 <- as.data.frame(df1)
+colnames(dados_plot1) <- c("Sexo", "Survived", "Count")
+ggplot(dados_plot1, aes(x = Sexo, y = Survived, size = Count, color = Survived)) +
+  geom_point(alpha = 0.7) +
+  scale_size_area(max_size = 20) +
+  scale_color_manual(values = c("Não" = "blue", "Sim" = "green")) +
+  labs(
+    title = "Bubble Plot de Sobrevivência por Classe (Titanic)",
+    x = "Classe do Passageiro",
+    y = "Sobreviveu",
+    size = "Número de Passageiros"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
 
 ## d)
 
-Considere as variáveis *Survived* e *Sex*. Faça a análise de correspondência, faça o biplot e interprete os resultados.
+Considere as variáveis Survived e Sex. Faça a análise de correspondência, faça o biplot e interprete os resultados.
+```{r}
+res_ca1 <- CA(df1, graph = FALSE)
+print(res_ca1)
+get_ca_row(res_ca1)$contrib
+get_eigenvalue(res_ca1)
+```
+- Novamente notamos que as variaveis 'Sex' e 'Survived' não são independentes. Há uma relação estatística entre o sexo do passageiro e se ele sobreviveu ou não.
 
+- Notamos uma diferença alta nas contribuições entre homens e mulheres, o que o perfil de sobrevivencia entre homens e mulheres é a força motriz dessa única dimensão; 
+
+- O motivo para não fazer o biplot é o mesmo da alternativa A.
 
 ## e)
 
-Considere as variáveis *Survived* e *AgeGroup*. Faça um mosaic plot e um buble plot desses dados.
+Considere as variáveis Survived e AgeGroup. Faça um mosaic plot e um buble plot desses dados.
 
+```{r}
+df2 <- table(base_titanic$AgeGroup,base_titanic$Survived)
+
+mosaicplot(df2,
+           main = "Mosaico Sobrevivencia Titanic faixa Etária",
+           ylab = "Faixa Etária do Passageiro",
+           xlab = "Quantidade de Sobreviventes",
+           col = c("blue", "green"),
+           off = 30,
+           dir = c("h","v"))
+
+# buble plot
+dados_plot2 <- as.data.frame(df2)
+colnames(dados_plot2) <- c("Idade", "Survived", "Count")
+ggplot(dados_plot2, aes(x = Idade, y = Survived, size = Count, color = Survived)) +
+  geom_point(alpha = 0.7) +
+  scale_size_area(max_size = 20) +
+  scale_color_manual(values = c("Não" = "blue", "Sim" = "green")) +
+  labs(
+    title = "Bubble Plot de Sobrevivência por Classe (Titanic)",
+    x = "Classe do Passageiro",
+    y = "Sobreviveu",
+    size = "Número de Passageiros"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
 ## f)
 
-Considere as variáveis *Survived* e *AgeGroup*. Faça a análise de correspondência, faça o biplot e interprete os resultados.
+Considere as variáveis Survived e AgeGroup. Faça a análise de correspondência, faça o biplot e interprete os resultados.
+```{r}
+res_ca2 <- CA(df2, graph = FALSE)
+print(res_ca2)
+get_ca_row(res_ca2)$contrib
+get_eigenvalue(res_ca2)
+```
+
+- O teste indica que existe uma relação estatisticamente significativa entre a sobrevivência do passageiro e sua faixa etária.
+
+- Notamos que a categoria 'Criança' tem um peso maior na definição dessa dimensão, ou seja, há uma diferença maior na variação das crianças que sobreviveram dos demais grupos. 
 
 ## g)
-
 Qual das variáveis explica melhor a sobrevivência ou não no titanic? Se você tivesse que fazer uma análise de correspondência multipla, com 3 variáveis, quais seriam?
+
+A análise dos eigenvalues revelou que a variável Sex (Gênero) demonstra a maior associação com Survived (Sobrevivência), indicando que o gênero é o fator individual mais influente na explicação da sobrevivencia do passageiro. Para uma Análise de Correspondência Múltipla, as variáveis 'Survived', 'Sex' e 'Pclass' seriam as escolhas mais adequadas.
